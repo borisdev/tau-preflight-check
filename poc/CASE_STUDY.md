@@ -76,13 +76,13 @@ The harness output object: the full conversation, every `cancel_reservation`/`tr
 
 ---
 
-## 1. What the customer's current eval reports
+## 1. What τ³'s grade reports
 
 τ³ grades task 47 on `reward_basis = [DB, COMMUNICATE]` with `communicate_info = []` — so the score reduces to a single question: **did the database change?** The agent correctly refused to cancel, so the database is untouched, so:
 
-> **τ³ score: reward = 1 — PASS.** ✅
+> **τ³ reward = 1 — PASS.**
 >
-> On every standard τ-bench metric, this conversation is a clean success. The customer's dashboard shows a green check and moves on.
+> On τ³'s reward this conversation is a pass; outcome-only grading records nothing further.
 
 ## 2. What actually happened (read the belief state, turn by turn)
 
@@ -104,13 +104,13 @@ The correct belief was right there: **a policy-grounded denial IS the resolution
 
 A human transfer **doesn't change the database.** The grade only watches the database. So the single thing the agent did wrong falls in the grade's blind spot — not by oversight, but by construction. *(Verified: `reward_basis=[DB,COMMUNICATE]`; the task's lone `nl_assertion` is diagnostic-only and only checks cancellation, not transfers.)*
 
-## 4. The value, in three currencies
+## 4. What the belief/constraint layer adds
 
-1. **Debuggable.** The output isn't "task failed" (it didn't fail) — it's a single addressable defect: *at turn 3, belief `request_disposition` went `deny → escalate`; action `transfer_to_human_agents` fired against an explicit user instruction.* One line, one turn, one fix.
+1. **Localization.** The output is not "task failed" (it did not fail) — it is a specific defect: at turn 3 the agent's disposition moves `deny → escalate`, and `transfer_to_human_agents` fires against an explicit user instruction. One turn, one action.
 
-2. **Helps the customer.** "Your agent **passes** this scenario, but in production it will needlessly escalate policy-denial conversations — extra human-agent load **and** a direct violation of customers who say *don't transfer me* — and your current eval will never flag it." That is a real, quantifiable production risk surfaced **before** deploy, that the green checkmark hid.
+2. **A failure invisible to outcome grading.** The agent passes τ³'s reward, yet in deployment this behavior escalates policy-denial conversations that should end at the denial — against users who explicitly ask not to be transferred. Outcome-only grading cannot surface it.
 
-3. **Points at the fix — and sometimes that fix is sellable data.** Here the lever is a **prompt patch** (cheap; we just hand it over): *"a policy-grounded denial is a complete resolution; transfer only on explicit user request."* When the **same belief lens** finds a defect that is *not* recoverable from the prompt — e.g. the sibling case [task 35](traces/task_35.md), where the agent cancels a policy-ineligible booking even though the rules are right there in its context — the fix is **expert-authored training data** ([Example A](FINDINGS.md#example-a--the-expert-training-datum-row-1)). That contrastive datum is the billable artifact.
+3. **Detection is separable from the fix.** Encoding the requirement as a `ProblemSpec` constraint makes it gradeable (§below). Whether the underlying behavior is best corrected by a prompt rule or requires additional training data is a separate, testable question — add the rule and re-run; if the behavior persists, it is a data problem, not a prompt one.
 
 ## 5. Provenance (so this isn't hand-waving)
 
@@ -120,4 +120,4 @@ A human transfer **doesn't change the database.** The grade only watches the dat
 
 ---
 
-> **In one line:** the database said *pass*; the belief state said *you just escalated a solved problem against the customer's wishes* — and that gap, invisible to the score, is the product.
+> **In one line:** the DB grade returns *pass*; the belief/constraint layer records an explicit constraint violation — an unrequested human transfer. The gap between the two is what this layer measures.

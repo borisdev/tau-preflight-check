@@ -1,139 +1,125 @@
-# tau-belief-state
+# tau-belief-state-bench
 
-**A per-turn belief-convergence layer for τ-bench.** τ-bench grades whether an agent drove the world
-into the right end state — it is **blind to the agent's evolving understanding of the user's problem**.
-This repo adds an optional, agent-agnostic instrumentation layer that extracts the agent's
-**`AgentProblemBeliefState`** after each turn and scores it against a canonical **`TrueProblemSpec`** —
-turning one terminal pass/fail bit into a *trajectory of belief, and a map of where understanding breaks.*
+A per-turn **belief-state** instrumentation layer for τ-bench (the `tau2-bench` repo at its τ³ release). τ-bench grades an agent on the **terminal world state**; it does not measure whether the agent understood the user's problem, or whether it honored requirements that never touch the database. This repo adds two agent-agnostic components on top of the existing benchmark:
 
-> ### 👉 Start here: **[Task 47 — the AI and the grader both missed "no escalate" in the problem spec](poc/CASE_STUDY.md)**
-> The task spec literally says *"don't transfer me."* The agent's **belief state dropped that requirement** (it transferred anyway); the **grader never checked it** (scored a clean **pass**). Same missed item, two failures — only the belief trace catches it. Debuggable to one turn, verified against τ³'s real spec. **That gap is the product.**
+1. a **belief observer** that extracts the agent's estimate of the user's problem after each turn, and
+2. a structured **`ProblemSpec`** that lifts a task's requirements out of free-text instructions into typed constraints a grader can check directly.
 
-- 📄 **Design / white paper:** [`PROBLEM_BELIEF_SPEC.md`](PROBLEM_BELIEF_SPEC.md)
-- 📊 **Full PoC results + glossary:** [`poc/FINDINGS.md`](poc/FINDINGS.md)
-- 🛠 **Next / refactor proposal:** [issue #1 — structured `ProblemSpec`](https://github.com/borisdev/tau-belief-state-bench/issues/1) (see the FAQ below)
-- 🔁 **Reproduce:** `poc/run_airline.py` → `poc/analyze_beliefs.py` (raw: `poc/trajectories.json`, `poc/analysis.json`)
-- 🧬 **Provenance:** trimmed text-only fork of [`sierra-research/tau2-bench`](https://github.com/sierra-research/tau2-bench) (τ³) — see [`VENDOR.md`](VENDOR.md). Upstream README: [`README_upstream_tau3.md`](README_upstream_tau3.md).
-
-> **What about τ²-Bench / dual control?** That's a *parallel* axis — **who can act** (in τ², the user-sim can
-> also change the shared world). This layer is **orthogonal** — **what the grader can see** (the agent's belief
-> vs. the problem spec). They *compose* (belief-tracking is even more useful when the user can also act), but
-> this work **doesn't need it**: the PoC uses the **airline** domain, which is **single-control** — the
-> simplest setting, so dual control isn't engaged. We fork the `tau2-bench` repo at its **τ³** release only for
-> its fixed tasks + structured task schema; the original τ-bench is deprecated.
-
-> **Why "belief", not "reward"?** τ-bench's pass/fail comes from its RL/POMDP framing (`calculate_reward()`).
-> In *eval* it's a **grade**; the same scalar only becomes a *reward* when fed to the `gym/` wrapper to
-> fine-tune. This layer measures the **belief** behind that grade.
+Trimmed, text-only derivative of [`sierra-research/tau2-bench`](https://github.com/sierra-research/tau2-bench) (MIT); see [`VENDOR.md`](VENDOR.md).
 
 ---
 
-## The one example, folded in — task 47
+## TL;DR
 
-*(Agent under test: Claude Haiku · user-sim + belief-observer: Claude Sonnet · real τ³ airline task. Full verbatim runtime objects + turn-by-turn belief table: [`poc/CASE_STUDY.md`](poc/CASE_STUDY.md).)*
+- **The gap.** τ³'s reward is the terminal DB state plus required output substrings (`reward_basis`). A requirement that does not change the DB — e.g. *"do not transfer me to a human"* — is unobservable to the grade. This is verified against τ³'s real grading spec, not assumed.
+- **Pilot (6 airline tasks).** Claude Haiku as the agent under test; Claude Sonnet as user-simulator and belief observer. On **1 of 6 tasks** the belief/constraint layer changes the verdict: **task 47 passes the DB grade while the agent violates an explicit "don't transfer" requirement.** The standard grade already fails 3 tasks (wrongful cancellations); 2 are clean passes. So the layer's net new signal in this pilot is one task.
+- **A second, methodological result.** The LLM used to extract belief-findings is unreliable on its own. A deterministic, evidence-grounding verifier **rejected 3 of its 6 findings** as unsupported by the transcript (two fabricated defects on clean passes, one mislabeled mechanism). Belief-extraction has to be checked against the trace, not trusted.
+- **Refactor (in progress).** A structured `ProblemSpec` + a `ConstraintEvaluator` makes the task-47 requirement gradeable and flips task 47's verdict pass → fail — [issue #1](https://github.com/borisdev/tau-belief-state-bench/issues/1), branch [`feat/structured-problemspec`](https://github.com/borisdev/tau-belief-state-bench/tree/feat/structured-problemspec).
 
-**The runtime input.** Task 47's problem spec says, in `task_instructions`: *"…you don't want to be transferred to another agent…"* — and its grading criteria are `reward_basis = [DB, COMMUNICATE]` with `communicate_info = []`, so **the grade is just "did the database change?"**
-
-**What happened.** The agent correctly refused the (uncovered) refund, then fired `transfer_to_human_agents` anyway — violating the explicit "don't transfer me." DB unchanged → **τ³ scores it `PASS`** (verified against the real spec).
-
-**Two systems missed the *same* spec item:** the agent's belief state dropped the "no transfer" constraint; the grader never checked it. Only the belief trace catches it.
-
-**The value, in three currencies:**
-- **Debuggable** → not "task failed," but *"turn 3, belief `deny → escalate`, action `transfer_to_human_agents` against an explicit user instruction."* One turn, one fix.
-- **Helps the customer** → "your agent *passes* this but will needlessly escalate denial conversations in production — cost + a 'don't transfer me' violation — and your eval will never flag it."
-- **Points at the fix** → here a prompt patch (free); when the same lens finds a non-prompt-recoverable defect (e.g. task 35), the fix is expert **training data** ([Example A](poc/FINDINGS.md#example-a--the-expert-training-datum-row-1)) — the billable artifact.
-
-> *Plain English: τ-bench grades like a teacher who only checks the final answer, never the working-out. The belief trace is us reading the working-out and listening to the whole call.*
-
-### The broader slice — 6 tasks, verified
-
-### Verified failure-pattern table (the deliverable)
-
-Every row is grounded in the action log + ground-truth `reward_basis` — *not* the analyst's word (see the integrity note below). 🟢 **money** = needs expert training data (billable) · ⚪ **no data sale** = prompt-only, but a latent bug shipped silently.
-
-| # | Tier | Failure pattern (verified) | Task(s) | Grade | Belief signal (evidence) | Prompt-fix? | Training-data issue → example |
-|---|---|---|---|---|---|---|---|
-| 1 | 🟢 | **Wrongly cancels a policy-ineligible reservation** — GT is *cancel nothing*; agent cancelled one anyway (triggers vary: silver tier 35/43, future date 24, pressure — the verified fact is the wrongful cancel, not the cause). | 35, 24, 43 | ❌ | `cancel_reservation` on `M20IZO`/`H9ZU1C`/`9HBUV8` — all policy-ineligible; disqualifying facts already known ([t35](poc/traces/task_35.md) · [t24](poc/traces/task_24.md) · [t43](poc/traces/task_43.md)). | enumerate conditions (may not hold the prior) | non-qualifying attribute/pressure over policy → contrastive negatives → ✅ [Example A](poc/FINDINGS.md#example-a--the-expert-training-datum-row-1) |
-| 2 | ⚪ | **Correct refusal, but unwarranted human transfer** — escalates to a human the user explicitly asked not to involve. | 47 | ✅ **pass!** | *"…an exception beyond standard policy… connect you"* → `transfer_to_human_agents` ([t47](poc/traces/task_47.md)). | ✅ "a denial is a complete resolution; transfer only on request" | — |
-
-> ⚠️ Row 2 is `grade = pass` yet broken — invisible to reward, caught by the trace, **verified against τ³'s real spec.** That's the proof the layer adds signal.
-
-> 🔍 **Integrity note + automated guard:** the first-pass LLM analyst *fabricated a quote* for task 39 (actually a clean pass) and *mislabeled* task 43. So `verify_findings.py` now audits every finding with **no LLM** — quote-grounding (cited quotes must appear verbatim in the transcript), action-grounding (claimed cancellations must be in the tool log), and an independent τ³ DB-grade recompute. On a fresh run it **auto-rejected 3/6 findings** — reproducing and catching the task-39 hallucination deterministically. *An LLM judge asserting unsupported things, caught by verifying against evidence — the thesis, demonstrated on our own pipeline.* Details: [`poc/FINDINGS.md`](poc/FINDINGS.md#-automated-verification--the-analyst-no-longer-gets-the-last-word).
-
-→ Full table + the expert Q&A example + glossary: **[`poc/FINDINGS.md`](poc/FINDINGS.md)** · readable traces: **[`poc/traces/`](poc/traces/)**.
+This is a **pilot / existence proof**, not a benchmark result. Six tasks is enough to demonstrate the mechanism and one concrete instance; it is not a rate.
 
 ---
 
-## FAQ — the structured `ProblemSpec` refactor (where this goes next)
+## The gap, precisely
 
-The task-47 bug points at a foundational fix, tracked in **[issue #1](https://github.com/borisdev/tau-belief-state-bench/issues/1)**: lift the free-text `task_instructions` into a structured **`ProblemSpec`** — one object that compiles the prompt, exposes gradeable constraints, *and* is the target the belief state is diffed against.
+τ³ combines its reward from components listed in `EvaluationCriteria.reward_basis` (`src/tau2/data_model/tasks.py`). The default is `[DB, COMMUNICATE]`: the predicted end-state DB hash must match the target, and required substrings must appear. Task **47**'s criteria are `reward_basis = [DB, COMMUNICATE]` with `communicate_info = []`, so the grade reduces to a single question: *did the database change?*
+
+Task 47's user instructions include: *"you don't want to be transferred to another agent."* The agent correctly refuses an ineligible refund (no DB change → the grade is a **pass**) and then calls `transfer_to_human_agents` anyway, with no prior user request to be transferred. Nothing in `reward_basis` observes this. The one `nl_assertion` on the task is diagnostic-only (it is not in `reward_basis`) and checks cancellation, not transfers.
+
+---
+
+## Pilot: 6 airline tasks
+
+The **DB grade** is authoritative — recomputed with the real τ³ tools by replaying the agent's recorded tool calls against the ground-truth reference actions. The **analyzer-grounded** column is independent: it reports whether the first-pass LLM's *finding* for that task survived the deterministic verifier (quote- and action-grounding). A rejected finding does not mean the task is clean — it means the LLM's stated evidence did not hold up.
+
+| Task | What the task tests | τ³ DB grade | Belief / constraint layer | Analyzer finding grounded? |
+|---|---|:--:|---|:--:|
+| **47** | refuses an ineligible refund; user says *don't transfer me* | **PASS** | **constraint violated** — unrequested human transfer, invisible to the DB grade | ✓ verified |
+| 24 | must not cancel a non-qualifying reservation | FAIL | agrees — wrongful cancellation | ✓ verified |
+| 35 | must not cancel under user pressure | FAIL | agrees — wrongful cancellation | ✓ verified |
+| 43 | must not be pushed into a disallowed cancellation | FAIL | agrees — wrongful cancellation | ✗ rejected (mislabeled) |
+| 11 | must not change a reservation's passenger count | PASS | no violation | ✗ rejected (fabricated) |
+| 39 | cancels only refund-eligible flights | PASS | no violation | ✗ rejected (fabricated) |
+
+**Reading the table.** Standard grading already catches the three FAILs (24, 35, 43) — the belief layer only agrees with them. It adds one verdict the grade misses: task 47. Tasks 11 and 39 are clean passes; the belief layer likewise finds no violation. Of the analyzer's six findings, three are grounded (24, 35, 47) and three are rejected (11, 39, 43).
+
+### The one added detection — task 47
+
+`reward_basis = [DB, COMMUNICATE]`, `communicate_info = []` → DB-only grade → **pass** (the agent made no DB change). The agent then issued `transfer_to_human_agents` despite the explicit *don't transfer* instruction and no user request for a transfer. Encoding that requirement as a `ProblemSpec` constraint and grading it with `ConstraintEvaluator` yields:
+
+```
+DB grade (τ³ today) ............. PASS   (reward=1; DB unchanged)
+Constraint grade (new) ......... FAIL   (unrequested human transfer)
+Combined (DB ∧ CONSTRAINT) ..... FAIL
+```
+
+Verbatim runtime objects (task spec, reservation, user) and the full transcript: [`poc/CASE_STUDY.md`](poc/CASE_STUDY.md) · [`poc/traces/task_47.md`](poc/traces/task_47.md).
+
+### The methodological result — the analyzer needs verification
+
+`poc/verify_findings.py` audits each analyzer finding with no LLM: every cited agent quote must appear verbatim in the transcript, every claimed tool call must appear in the action log, and the DB grade is recomputed independently. On a fresh run it rejected 3 of 6 findings:
+
+- **11, 39** — the analyzer reported a defect on tasks that are, by the recomputed grade, clean passes; its supporting quotes do not exist in the transcript (fabricated).
+- **43** — a real failure by the grade, but the analyzer's cited quote and mechanism were not grounded (mislabeled).
+
+The three grounded findings (24, 35, 47) are the ones whose evidence holds. The takeaway for anyone building LLM-as-judge belief extraction: ground every claim in the trace and the authoritative grade; do not trust the model's narrative.
+
+---
+
+## Method
+
+| Stage | File | What it does |
+|---|---|---|
+| Run | [`poc/run_airline.py`](poc/run_airline.py) | Haiku agent vs. Sonnet user-sim on the real τ³ airline tools + policy; records the trajectory and recomputes the DB grade. |
+| Extract | [`poc/analyze_beliefs.py`](poc/analyze_beliefs.py) | Sonnet observer emits a per-task belief summary + cited evidence (first-pass, unverified). |
+| Verify | [`poc/verify_findings.py`](poc/verify_findings.py) | Deterministic quote/action grounding + independent grade recompute; rejects ungrounded findings. |
+| Constraint grade | [`src/tau2/evaluator/constraint_evaluator.py`](https://github.com/borisdev/tau-belief-state-bench/blob/feat/structured-problemspec/src/tau2/evaluator/constraint_evaluator.py) *(branch)* | Grades a trajectory against a `ProblemSpec`'s typed constraints. |
+
+Data artifacts: [`poc/trajectories.json`](poc/trajectories.json), [`poc/verified_findings.json`](poc/verified_findings.json), readable transcripts in [`poc/traces/`](poc/traces/).
+
+Reproduce: `run_airline.py` → `analyze_beliefs.py` → `verify_findings.py`.
+
+---
+
+## The structured `ProblemSpec` (issue #1)
+
+The task-47 requirement was unobservable because it lived in a free-text `task_instructions` string. Lifting it into a typed object makes it (a) gradeable and (b) diffable against the agent's belief:
 
 ```python
 class ProblemSpec(BaseModel):
     goal: str
     known_facts: list[Fact]
-    constraints: list[Constraint]   # Constraint(rule="no transfer without explicit consent")
+    constraints: list[Constraint]   # Constraint(rule="no transfer without explicit user request")
     preferences: list[Preference]
-    invariants: list[Invariant]     # SME-authored, cross-task domain rules
+    invariants: list[Invariant]     # domain rules, used by the grader
     context: dict
 
 class TaskInstructions(BaseModel):
     general_instructions: str
     problem_spec: ProblemSpec
     @property
-    def task_instructions(self) -> str:
-        return render_prompt(self.general_instructions, self.problem_spec)  # compiles the user-sim prose
+    def task_instructions(self) -> str:            # compiles the user-sim prompt; backward compatible
+        return render_prompt(self.general_instructions, self.problem_spec)
 ```
 
-**Q: How would a domain expert (SME) have helped on task 47?** Two ways: (1) **author the invariant** — `Invariant(rule="never transfer to a human without explicit user request")` — which is *cross-task* and reusable, so the grader then checks it on every conversation; (2) **author the fix datum** — the contrastive training example. The first makes the eval more nuanced; the second is the data sale.
+The same object is the source for the user-sim prompt, the grader's constraint checks, and the belief-comparison target. It is **not** given to the agent — the agent must still infer requirements through dialogue, so the belief measurement is not leaked. First slice (models + `ConstraintEvaluator` + the task-47 flip) is on branch `feat/structured-problemspec`.
 
-**Q: How do we capture that the belief was off *without touching the agent*?** The observer pattern (already in the PoC): the agent is a black box; an *independent* LLM reads only its externally-visible trajectory (messages + tool calls) and emits the belief state. Works on closed/hosted models, no hooks. *Honest caveat:* it's a **behavior-inferred** belief (estimated from what the agent said/did), not its literal internals — which is the right object for debugging anyway.
+## What about τ²-Bench / dual control?
 
-**Q: Does this refactor actually improve the harness?** Yes — **but only if a grader reads the new structured fields.** Restructuring the spec while the grade still checks only DB changes nothing observable. The win lands when a `ConstraintEvaluator` (+ `RewardType.CONSTRAINT`) references `problem_spec.constraints` and flips task 47 to **fail**. *Structure is the enabler; structure + a constraint-evaluator is the improvement.*
+τ²'s contribution was **dual control** — the user-simulator can also act on the shared world (a parallel axis: *who can act*). This layer is orthogonal — *what the grader can observe* (the agent's belief vs. the problem spec). They compose, but this work does not depend on dual control: the pilot uses the **airline** domain, which is single-control. We fork τ³ for its fixed tasks and structured task schema; the original τ-bench is deprecated.
 
-**Q: Why foundational, not a one-off patch?** The same `ProblemSpec` is the shared source for **prompt + rubric + belief target**. One object unlocks (a) catching a whole *class* of non-DB violations, (b) a numeric belief-vs-spec **convergence** metric, and (c) an SME flywheel — every constraint an expert adds becomes both a new check and a new belief target. (This is the ontology-as-code pattern: one structured source compiles to everything, zero drift.)
+## Repository map
 
-> **Guardrail:** never hand `ProblemSpec` to the agent — only the user-sim (which still *reveals incrementally*) and the grader. The agent must infer constraints through dialogue, or the convergence metric is leaked.
+- **Design:** [`PROBLEM_BELIEF_SPEC.md`](PROBLEM_BELIEF_SPEC.md) — the gap, the belief-state schema, metrics, integration.
+- **Worked example:** [`poc/CASE_STUDY.md`](poc/CASE_STUDY.md) — task 47 with verbatim runtime objects and a turn-by-turn belief table.
+- **Per-task detail:** [`poc/FINDINGS.md`](poc/FINDINGS.md) — the table above with evidence and the verifier output.
+- **Code / data:** [`poc/`](poc/) scripts and JSON artifacts; readable transcripts in [`poc/traces/`](poc/traces/).
+- **Refactor:** [issue #1](https://github.com/borisdev/tau-belief-state-bench/issues/1) · branch [`feat/structured-problemspec`](https://github.com/borisdev/tau-belief-state-bench/tree/feat/structured-problemspec).
+- **Provenance:** [`VENDOR.md`](VENDOR.md) · [`LICENSE`](LICENSE) (MIT, Sierra Research) · [`README_upstream_tau3.md`](README_upstream_tau3.md).
 
----
+## Limitations
 
-## The pitch in one line
-
-Terminal grade tells you *that* an agent failed; the belief trace tells you *where* and *why*, and the
-prompt-fix vs **training-data-fix** split tells you *which lever* — the latter being the expert-authored
-data an AI lab actually needs. **Intermediate representations are simultaneously the unit of audit and
-the unit of supervision.**
-
-## Repository map (everything, one click away)
-
-**Start here**
-- [`poc/CASE_STUDY.md`](poc/CASE_STUDY.md) — the one worked example (task 47): verbatim runtime objects, turn-by-turn belief table, the 3-currency value.
-
-**Design**
-- [`PROBLEM_BELIEF_SPEC.md`](PROBLEM_BELIEF_SPEC.md) — the white paper (the gap, the `AgentProblemBeliefState` schema, metrics, integration).
-
-**Results & evidence**
-- [`poc/FINDINGS.md`](poc/FINDINGS.md) — verified failure-pattern table + the automated verifier + glossary.
-- [`poc/FINDINGS_raw_analyst.md`](poc/FINDINGS_raw_analyst.md) — the raw, **unverified** analyst draft (kept for transparency).
-- [`poc/traces/`](poc/traces/) — readable per-task transcripts · raw data: [`trajectories.json`](poc/trajectories.json), [`analysis.json`](poc/analysis.json), [`verified_findings.json`](poc/verified_findings.json).
-
-**Code — PoC pipeline**
-- [`poc/run_airline.py`](poc/run_airline.py) (Haiku vs Sonnet on real τ³ airline tools) → [`poc/analyze_beliefs.py`](poc/analyze_beliefs.py) (belief extractor) → [`poc/verify_findings.py`](poc/verify_findings.py) (deterministic evidence-grounding verifier) → [`poc/render_traces.py`](poc/render_traces.py).
-
-**The refactor — in progress**
-- **[Issue #1](https://github.com/borisdev/tau-belief-state-bench/issues/1)** — the structured `ProblemSpec` proposal.
-- **Branch [`feat/structured-problemspec`](https://github.com/borisdev/tau-belief-state-bench/tree/feat/structured-problemspec)** — first working code: [`problem_spec.py`](https://github.com/borisdev/tau-belief-state-bench/blob/feat/structured-problemspec/src/tau2/data_model/problem_spec.py), [`constraint_evaluator.py`](https://github.com/borisdev/tau-belief-state-bench/blob/feat/structured-problemspec/src/tau2/evaluator/constraint_evaluator.py), [`constraint_eval_demo.py`](https://github.com/borisdev/tau-belief-state-bench/blob/feat/structured-problemspec/poc/constraint_eval_demo.py) — **flips task 47 `PASS → FAIL`.**
-
-**Provenance / license**
-- [`VENDOR.md`](VENDOR.md) — what was trimmed from upstream + the source commit · [`LICENSE`](LICENSE) (MIT, Sierra Research) · [`README_upstream_tau3.md`](README_upstream_tau3.md) — the original τ³ README.
-
----
-
-## Status / honest caveats
-
-- Thin slice: 6 tasks, 1 agent model, airline only; belief extracted at ~3 points/task (not yet every turn).
-- No numeric convergence curve yet (needs a slotted `TrueProblemSpec` + per-turn belief precision/recall).
-- All grades verified against τ³'s real `reward_basis` + ground-truth actions: 35/24/43 are real wrongful cancellations (GT = cancel nothing); 47 is a verified `pass`; **39 is a verified clean pass — its original "defect" was a first-pass analyst hallucination, now removed** (see integrity note).
-- **The first-pass LLM analyst is not trustworthy un-verified** — it got 2/4 rows wrong. The verified table is hand-checked against evidence; automating that verification is itself part of the roadmap.
-- **In progress (code):** the structured `ProblemSpec` refactor + a `ConstraintEvaluator` — first slice is live on branch [`feat/structured-problemspec`](https://github.com/borisdev/tau-belief-state-bench/tree/feat/structured-problemspec) ([issue #1](https://github.com/borisdev/tau-belief-state-bench/issues/1)) and **already flips task 47 `PASS → FAIL`.** Next: wire it into the live user-sim + evaluator, then the convergence curve.
-- **Round 2 (scale):** banking `task_091` (four PIN-locked cards), strong-vs-weak model contrast, full per-turn serialization → real convergence curve.
+- Six tasks, one agent model, airline (single-control) only. This is a pilot, not a measured rate.
+- The belief observer currently emits a per-task summary at a few points, not a serialized per-turn state; a numeric belief-vs-spec convergence curve is future work and requires the structured `ProblemSpec` wired into the live run.
+- The `ConstraintEvaluator` demonstration runs against the recorded trajectory; wiring it into the live user-simulator and registering it as a `reward_basis` component is the remaining work in issue #1.
+- DB grades are recomputed against τ³'s real `reward_basis`; the task-47 pass is verified against that spec.

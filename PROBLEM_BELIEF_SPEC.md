@@ -217,18 +217,18 @@ isn't allowed to grade itself).
 
 ---
 
-## 7. Why this matters (the ROI angle)
+## 7. Why per-turn localization matters
 
 Today an agent that fails a τ-bench task yields **one terminal bit** and, at best, a coarse
-post-hoc failure label. A serious eval-and-grader practice needs to answer a sharper
+post-hoc failure label. A useful eval needs to answer a sharper
 question: **at which conversational step did the agent's understanding diverge from reality, and is
-the fix a prompt change (cheap) or a new training example (the billable expert opportunity)?**
+the fix a prompt change or one that requires new training data?**
 
 The per-turn belief trace localizes the divergence to a **single turn and a single slot**. Aggregated
 across many trajectories, recurring divergences cluster into **failure patterns** — and each pattern
 carries a disambiguating test and an intervention type. This is the reusable diagnostic schema:
 
-| Failure Pattern | Observations (linked cases) | Hypothesized Root Cause(s) | Test to Disambiguate | Prompt Fix? | Training-Data Fix? (the billable opportunity) |
+| Failure Pattern | Observations (linked cases) | Hypothesized Root Cause(s) | Test to Disambiguate | Prompt Fix? | Training-Data Fix? |
 |---|---|---|---|---|---|
 | Belief diverges where a constraint is *withheld* then revealed | turns where `constraint` appears late but agent already acted | agent didn't probe; assumed defaults | add a required-information probe; ablate the withholding | likely **prompt** | maybe |
 | Silent `assumed` fills a `missing` slot (no clarifying question) | turns with `status=assumed` ∧ truth=`missing` | model believed it had enough info | force-feed the missing fact; re-run | prompt **or** training | **yes** |
@@ -242,8 +242,7 @@ carries a disambiguating test and an intervention type. This is the reusable dia
   the `gym/` wrapper can consume for fine-tuning.
 
 In short: terminal reward tells you *that* the agent failed; the belief trace tells you *where* and
-*why*, and the diagnostic schema tells you *which lever* (prompt vs. data) — which is the unit of
-work a benchmarks-and-graders business actually sells.
+*why*, and the diagnostic schema tells you *which lever* to reach for (prompt vs. data).
 
 ---
 
