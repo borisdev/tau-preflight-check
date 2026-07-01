@@ -26,7 +26,7 @@ Three typed instances — the target the agent must reach, and its belief at the
 
 <table>
 <tr>
-<th align="left" width="34%">Target — <code>ProblemSpec</code></th>
+<th align="left" width="34%">The spec — <code>ProblemSpec</code></th>
 <th align="left" width="33%">Agent belief @ turn 1</th>
 <th align="left" width="33%">Agent belief @ turn 12 — it acts</th>
 </tr>
