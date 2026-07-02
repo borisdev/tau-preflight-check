@@ -63,7 +63,7 @@ The belief never converged on `transfer_requested`; the agent acted while it was
 
 ### Enriching the spec with expertise (three examples)
 
-Three ways to fix task 47 — each an example of enriching the `ProblemSpec` with **one piece of expert knowledge the written policy doesn't contain**:
+These are the **`UNKNOWN`-slot mechanics** made concrete — which slots must be resolved, and what an agent may (or may not) do while one is still `UNKNOWN`. That is exactly where expert knowledge enters; each fix below adds **one piece the written policy doesn't contain**:
 
 | Candidate fix | Why it works | Expert input needed |
 |---|---|---|
