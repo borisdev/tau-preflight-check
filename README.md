@@ -1,5 +1,7 @@
 # tau-belief-state-bench
 
+*Does the agent get on the same page with the user before acting?*
+
 ## What is this about?
 
 We extend τ³-bench from evaluating only the terminal DB state to also evaluating the **convergence (or divergence) of the agent's `ProblemSpecBelief` toward the user's true `ProblemSpec`** — the understanding the agent forms in order to act.
