@@ -13,16 +13,13 @@ We extend τ³-bench from evaluating only the terminal DB state to also evaluati
 
 ---
 
-## Motivation: The grader's belief blind spot causes a bug
+## The τ³-bench grader is wrong on airline task 47
 
-**The τ³-bench grader is wrong on airline task 47.** The agent correctly refuses an ineligible refund, then transfers the user to a human — even though the task states *"you don't want to be transferred to another agent."* The grade is `PASS` — a **silent false-pass**: the requirement was one clause buried in the free-text `task_instructions`, so the grader never checks it.
+The agent correctly refuses an ineligible refund, then transfers the user to a human — even though the task states *"you don't want to be transferred to another agent."* The grade is `PASS` — a **silent false-pass**: the requirement was one clause buried in the free-text `task_instructions`, so the grader never checks it.
 
-## Intermediate artifacts fix: ProblemSpec and ProblemSpecBelief
+## ProblemSpec and ProblemSpecBelief
 
-We add two structured entities — the same shape, in two roles:
-
-- **`ProblemSpec`** (the truth) — a typed specification of the task's *true* requirements (goal, constraints, invariants), each a checkable predicate. Experts progressively enrich it, which sharpens the grader; and handing the agent the spec's *shape* (not its per-task values) makes it a better agent — it knows which questions to ask before acting.
-- **`ProblemSpecBelief`** (the estimate) — the same spec as the agent infers it, turn by turn, with slots `UNKNOWN` until resolved. Its convergence (or divergence) toward the true `ProblemSpec` is an observable proxy for competence — extending judgment from the terminal state to the agent's ability to *understand the problem before acting*.
+We add two structured entities — the same shape in two roles: a true **`ProblemSpec`** (the target) and the agent's **`ProblemSpecBelief`** (its estimate). Handing the agent the spec's *shape* — not its per-task values — also makes it a better agent: it knows which questions to ask before acting.
 
 **From prose to a checkable spec.** The raw task is one free-text blob:
 
