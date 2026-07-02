@@ -10,14 +10,14 @@ We define **ambiguity** as the gap between the true `ProblemSpec` and the agent'
 
 **Why it matters for AI quality.**
 - **A more precise, deterministic grader** — the next section shows a real bug it catches on a live τ³ airline task.
-- **Better-behaved agents** — when a required slot is `UNKNOWN`, they ask, not act on a guess. [ProblemSpec vs ProblemSpecBelief →](#problemspec-and-problemspecbelief)
+- **Better-behaved agents** — when a required `ProblemSpecBelief` slot is `UNKNOWN`, the AI agent asks rather than acting on a guess. [ProblemSpec vs ProblemSpecBelief →](#problemspec-and-problemspecbelief)
 - **`ProblemSpec` shape captures expertise** in policy and tacit communication knowledge. [Three concrete examples →](#enriching-the-spec-with-expertise-three-examples)
 
 ---
 
 ## The τ³-bench grader is wrong on airline task 47
 
-The agent correctly refuses an ineligible refund, then transfers the user to a human — even though the task states *"you don't want to be transferred to another agent."* The grade is `PASS` — a **silent false-pass**: the requirement was one clause buried in the free-text `task_instructions`, so the grader never checks it.
+In our test run, Claude Haiku correctly refuses an ineligible refund, then transfers the user to a human — even though the task states *"you don't want to be transferred to another agent."* The grade is `PASS` — a **silent false-pass**: the requirement was one clause buried in the free-text `task_instructions`, so the grader never checks it.
 
 ## ProblemSpec and ProblemSpecBelief
 
