@@ -4,9 +4,9 @@
 
 ## What is this about?
 
-We extend τ³-bench from evaluating only the terminal DB state to also evaluating the **convergence (or divergence) of the agent's `ProblemSpecBelief` toward the user's true `ProblemSpec`** — how well the agent resolves ambiguity, the `UNKNOWN` slots of its belief, by asking the user, before it acts.
+We extend τ³-bench from evaluating only the terminal DB state to also evaluating **how well the agent resolves ambiguity about the user's unobserved problem — by asking, before it acts.**
 
-**The abstraction: make ambiguity explicit.** Every requirement becomes a typed slot the belief marks *resolved* or `UNKNOWN`. Where the true `ProblemSpec` fixes a value (`transfer_requested = False`) but the `ProblemSpecBelief` still reads `UNKNOWN`, that gap *is* the ambiguity — and acting while it's open is the bug. Terminal-state grading can't see that; a typed belief can.
+**Ambiguity is the gap between the true `ProblemSpec` and the agent's `ProblemSpecBelief`.** Every requirement is a typed slot the belief marks *resolved* or `UNKNOWN`; where the true `ProblemSpec` fixes a value (`transfer_requested = False`) but the `ProblemSpecBelief` still reads `UNKNOWN`, that slot is unresolved — and acting on it is the bug. Terminal-state grading can't see that; a typed belief can.
 
 **Why it matters for AI quality.**
 - **A more precise, deterministic grader** — the next section shows a concrete bug it catches.
