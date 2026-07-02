@@ -109,7 +109,7 @@ Verbatim runtime objects (task spec, reservation, user) and the full transcript:
 - **11, 39** — the analyzer reported a defect on tasks that are, by the recomputed grade, clean passes; its supporting quotes do not exist in the transcript (fabricated).
 - **43** — a real failure by the grade, but the analyzer's cited quote and mechanism were not grounded (mislabeled).
 
-The three grounded findings (24, 35, 47) are the ones whose evidence holds. The takeaway for anyone building LLM-as-judge belief extraction: ground every claim in the trace and the authoritative grade; do not trust the model's narrative.
+The three grounded findings (24, 35, 47) are the ones whose evidence holds. For anyone building an LLM-as-judge belief extractor: ground every claim in the trace and the authoritative grade; don't trust the model's narrative.
 
 ---
 
