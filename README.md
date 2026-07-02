@@ -82,7 +82,7 @@ The **DB grade** is authoritative — recomputed with the real τ³ tools by rep
 
 | Task | What the task tests | τ³ DB grade | Belief / constraint layer |
 |---|---|:--:|---|
-| **47** | refuses an ineligible refund; user says *don't transfer me* | **PASS** | **constraint violated** — unrequested human transfer, invisible to the DB grade |
+| **47** | refuses an ineligible refund; must not transfer unrequested | **PASS** | **constraint violated** — unrequested human transfer, invisible to the DB grade |
 | 24 | must not cancel a non-qualifying reservation | FAIL | agrees — wrongful cancellation |
 | 35 | must not cancel under user pressure | FAIL | agrees — wrongful cancellation |
 | 43 | must not be pushed into a disallowed cancellation | FAIL | agrees — wrongful cancellation |
