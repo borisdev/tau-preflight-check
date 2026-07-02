@@ -61,7 +61,7 @@ The disqualifying facts were already present in the conversation, so this is pol
 
 ## Glossary
 
-- **Belief state** — the agent's running estimate of the user's problem, inferred from the conversation. Represented as `AgentProblemBeliefState`.
+- **Belief state** — the agent's running estimate of the user's problem, inferred from the conversation. Represented as `ProblemSpecBelief`.
 - **DB grade** — τ³'s reward for the task, recomputed by replaying the agent's tool calls against the ground-truth reference actions with the real τ³ tools.
 - **Constraint** — a typed requirement in a `ProblemSpec` (e.g. "no transfer without explicit user request") that a `ConstraintEvaluator` grades directly.
 - **Grounded finding** — an analyzer finding whose cited quotes and tool calls are present in the transcript and consistent with the recomputed grade.

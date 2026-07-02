@@ -4,7 +4,7 @@
 
 The task is *partially observable*: the agent maintains a **belief state** — a posterior over a **latent variable** (the user's true objective) that it updates from partial, incrementally-revealed evidence.
 
-- **Belief-state tracking under partial observability (POMDP).** The hidden problem is the latent state; the agent's estimate is the belief state. "Belief state" is also the term of art in **dialogue-state tracking (DST)** for task-oriented dialogue (Young et al.), so `BeliefState` is native, not a metaphor.
+- **Belief-state tracking under partial observability (POMDP).** The hidden problem is the latent state; the agent's estimate is the belief state. "Belief state" is also the term of art in **dialogue-state tracking (DST)** for task-oriented dialogue (Young et al.), so tracking a `ProblemSpecBelief` here is native, not a metaphor.
 - **Assistance games / CIRL** (Hadfield-Menell & Russell). Names *why* task 47 fails: an agent uncertain about the human's objective should be deferential / information-gathering, not act decisively. Acting while the objective is `UNKNOWN` is the canonical assistance-game failure — acting under epistemic uncertainty instead of reducing it.
 - **Grounding / common ground** (Clark). The dialogue-pragmatics term for two parties converging on shared understanding.
 - **Theory of Mind / intent inference / user modeling.** Modeling the user's goal as a hidden mental state.

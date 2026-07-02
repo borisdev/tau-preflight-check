@@ -2,12 +2,12 @@
 
 ## What is this about?
 
-We extend τ³-bench from evaluating only the terminal DB state to also evaluating the **convergence (or divergence) of the agent's `BeliefState` toward the user's true `ProblemSpec`** — the understanding the agent forms in order to act.
+We extend τ³-bench from evaluating only the terminal DB state to also evaluating the **convergence (or divergence) of the agent's `ProblemSpecBelief` toward the user's true `ProblemSpec`** — the understanding the agent forms in order to act.
 
 **Why it matters for AI quality.**
 - **Better-behaved agents.** Two agents reaching the same end state can differ in whether they understood the problem, asked before acting, or respected constraints. Grading belief-convergence + constraints turns those *process* differences into signal — for eval *and* for training.
 - **A more precise grader.** Decomposing a holistic judgment into checkable predicates raises reliability (factored / rubric-based evaluation) and closes **silent false-passes** — catching violations outcome-only scoring is structurally blind to.
-- **Explicit expert knowledge.** The `ProblemSpec` is code an expert enriches; encoded expertise **compounds** into both a sharper grader and a better training target — a learning loop, not a one-off benchmark.
+- **Explicit expert knowledge.** The `ProblemSpec` is versioned, executable code that turns tacit expertise into checkable rules; enriching it **compounds** into a sharper grader and a better training target — a learning loop, and an auditable record of what *correct* means as policy changes.
 
 Formally, a dialogue is *partially observable*: the user's objective is a **latent variable** the agent infers from partial, incrementally-revealed evidence. τ-bench applies **outcome supervision** (it scores the terminal state); we add **process supervision over the belief state**. *(Framing in the literature's terms — POMDP belief states, assistance games, process reward models — is in [`FRAMING.md`](FRAMING.md).)*
 
@@ -17,12 +17,12 @@ Formally, a dialogue is *partially observable*: the user's objective is a **late
 
 **The τ³-bench grader is wrong on airline task 47.** The agent correctly refuses an ineligible refund, then transfers the user to a human — even though the task states *"you don't want to be transferred to another agent."* The grade is `PASS`. That requirement was one clause buried in the free-text `task_instructions`, so the grader never checks it.
 
-## Intermediate artifacts fix: ProblemSpec and BeliefState
+## Intermediate artifacts fix: ProblemSpec and ProblemSpecBelief
 
-We add two structured entities:
+We add two structured entities — the same shape, in two roles:
 
-- **`ProblemSpec`** — a typed specification of the task's *true* requirements (goal, constraints, invariants), each a checkable predicate. Experts progressively enrich it, which monotonically sharpens the grader: a learning system, and a more accurate grader.
-- **`BeliefState`** — the agent's evolving *estimate* of that `ProblemSpec`, inferred from the dialogue. Its convergence (or divergence) toward the true `ProblemSpec` is an observable proxy for competence — extending judgment from the terminal state to the agent's ability to *understand the problem before acting*.
+- **`ProblemSpec`** (the truth) — a typed specification of the task's *true* requirements (goal, constraints, invariants), each a checkable predicate. Experts progressively enrich it, which sharpens the grader; and handing the agent the spec's *shape* (not its per-task values) makes it a better agent — it knows which questions to ask before acting.
+- **`ProblemSpecBelief`** (the estimate) — the same spec as the agent infers it, turn by turn, with slots `UNKNOWN` until resolved. Its convergence (or divergence) toward the true `ProblemSpec` is an observable proxy for competence — extending judgment from the terminal state to the agent's ability to *understand the problem before acting*.
 
 **From prose to a checkable spec.** The raw task is one free-text blob:
 
@@ -44,22 +44,26 @@ ProblemSpec(                                        # ground truth — the targe
     Constraint("no cancel unless full refund")])
 ```
 
-**The agent never sees this spec — it must infer it.** Its `BeliefState` is its *estimate* of the `ProblemSpec`, and here it diverges: at the moment it acts (turn 12), the slot the "no transfer" constraint depends on is still `UNKNOWN`.
+**The agent never sees this spec — it must infer it.** The `ProblemSpecBelief` is that same spec as the agent estimates it; the slots its constraints depend on start `UNKNOWN`. Here it diverges — at the moment it acts (turn 12), the slot behind the *no-transfer* constraint is still `UNKNOWN`:
 
 ```python
-BeliefState(turn=1,  goal="cancel + refund",         # estimate — nothing resolved yet
-            refund_eligible=UNKNOWN, transfer_requested=UNKNOWN)
+ProblemSpecBelief(turn=1,        # the agent's estimate — nothing resolved yet
+  goal="cancel + refund",
+  transfer_requested=UNKNOWN,     # slot behind "no transfer unless asks"
+  refund_eligible=UNKNOWN)        # slot behind "no cancel unless refund"
 
-BeliefState(turn=12, refund_eligible=False,           # learned the refund fact…
-            transfer_requested=UNKNOWN,                # …but this stayed UNKNOWN
-            action="transfer")                         # ← acted anyway
+ProblemSpecBelief(turn=12,
+  goal="cancel + refund",
+  refund_eligible=False,          # resolved
+  transfer_requested=UNKNOWN,     # never resolved — yet…
+  action="transfer")              # …acted anyway
 ```
 
 The belief never converged on `transfer_requested`; the agent acted while it was `UNKNOWN`. Full per-turn trajectory and graded verdict: [`poc/CASE_STUDY.md`](poc/CASE_STUDY.md).
 
-### Candidate fixes (each needs expert input)
+### Enriching the spec with expertise (three examples)
 
-Three small ways to make the grader catch task 47. Each needs **one piece of expert knowledge the written policy doesn't contain** — and that input is the thing to elicit:
+Three ways to fix task 47 — each an example of enriching the `ProblemSpec` with **one piece of expert knowledge the written policy doesn't contain**:
 
 | Candidate fix | Why it works | Expert input needed |
 |---|---|---|
@@ -130,7 +134,7 @@ Reproduce: `run_airline.py` → `analyze_beliefs.py` → `verify_findings.py`.
 
 ## Implementation status (issue #1)
 
-The `ProblemSpec` / `BeliefState` types (`render_prompt`) and a `ConstraintEvaluator` — the first slice that flips task 47 `PASS → FAIL` — are on branch [`feat/structured-problemspec`](https://github.com/borisdev/tau-belief-state-bench/tree/feat/structured-problemspec); the full field list and design are in [`PROBLEM_BELIEF_SPEC.md`](PROBLEM_BELIEF_SPEC.md). The `ProblemSpec` is the shared source for the user-sim prompt, the grader's constraint checks, and the belief-comparison target — but it is **not** given to the agent, so the belief measurement is not leaked. Tracked in [issue #1](https://github.com/borisdev/tau-belief-state-bench/issues/1).
+The `ProblemSpec` / `ProblemSpecBelief` types (`render_prompt`) and a `ConstraintEvaluator` — the first slice that flips task 47 `PASS → FAIL` — are on branch [`feat/structured-problemspec`](https://github.com/borisdev/tau-belief-state-bench/tree/feat/structured-problemspec); the full field list and design are in [`PROBLEM_BELIEF_SPEC.md`](PROBLEM_BELIEF_SPEC.md). The `ProblemSpec` is the shared source for the user-sim prompt, the grader's constraint checks, and the belief-comparison target — but it is **not** given to the agent, so the belief measurement is not leaked. Tracked in [issue #1](https://github.com/borisdev/tau-belief-state-bench/issues/1).
 
 ## Where expert elicitation raises grader fidelity
 
