@@ -2,18 +2,30 @@
 
 *How well does the agent get on the same page with the user?*
 
-## What is this about?
+**The programme.** This work is part of a broader push in the AI eval community: using **failure-pattern analysis** to target bad AI behaviors that can be remedied with input from human domain experts.
 
-We extend τ³-bench from evaluating only the terminal DB state to also evaluating how well the agent resolves ambiguity about the user's unobserved problem before it acts.
+**The behavior.** Broadly, we work on one class of it — **acting without getting on the same page**: without consent, understanding, or asking. τ³'s setting is airline support, but the pattern is general — it's the same failure a coding, medical, or finance agent makes when it acts before it understands.
 
-We define **ambiguity** as the gap between the true [`ProblemSpec`](#problemspec-and-problemspecbelief) and the agent's [`ProblemSpecBelief`](#problemspec-and-problemspecbelief) over the fields required to safely execute the pending action.
+**This benchmark.** We extend τ³-bench from grading only the terminal DB state → to also grading whether the agent got on the same page before it acted.
+
+## Innovation
+
+Our eval innovation: we **instrument the unobservable** — the user's latent problem and the agent's current belief — as two comparable typed objects, and treat the **gap between them as the failure signal**. That gap flags exactly where **targeted expert data** most improves AI quality.
+
+**Two phases.**
+1. **Flag — automated, no expert.** An LLM-as-judge structures the latent problem (from τ³ `task_instructions`) and the agent's belief, then flags **epistemic ambiguity**: the agent acting before it resolved what it needed to know.
+2. **Fill — targeted expert data.** Only at the flagged spots, a domain expert authors the missing rule as a **PDDL epistemic precondition** — which then drives both **grading** and **gating**.
 
 **Why it matters for AI quality.**
 - **A more precise, deterministic grader** — the next section shows a real bug it catches on a live τ³ airline task.
-- **Better-behaved agents** — when a required `ProblemSpecBelief` slot is `UNKNOWN`, the AI agent asks rather than acting on a guess. [ProblemSpec vs ProblemSpecBelief →](#problemspec-and-problemspecbelief)
-- **Nuanced expert knowledge is explicitly represented by the shape of the `ProblemSpec`** — a way to collect human expertise and encode it as reusable **human-expert data** that both drives the grader and gates the agent's behavior before it acts. [SME-authored policy →](#sme-authored-policy-what-ambiguity-to-resolve-before-acting)
+- **Better-behaved agents** — when a required `ProblemSpecBelief` slot is `UNKNOWN`, the agent asks rather than acting on a guess. [ProblemSpec vs ProblemSpecBelief →](#problemspec-and-problemspecbelief)
+- **Human expertise becomes reusable data** — the shape of the `ProblemSpec` lets us collect expert judgment and encode it as **human-expert data** that both grades and gates agent behavior. [SME-authored policy →](#sme-authored-policy-what-ambiguity-to-resolve-before-acting)
 
 ---
+
+## What is "resolving ambiguity" (getting on the same page) all about?
+
+We define **ambiguity** as the gap between the true [`ProblemSpec`](#problemspec-and-problemspecbelief) and the agent's [`ProblemSpecBelief`](#problemspec-and-problemspecbelief) over the fields required to safely execute the pending action.
 
 ## τ³-bench passes a real violation on airline task 47
 
@@ -68,6 +80,18 @@ At turn 12 the agent calls `transfer_to_human_agents()` while `transfer_requeste
 
 Subject-matter experts (SMEs) **hydrate** these offline: for each tool action, *which slots must be grounded, to what value, and how severe if skipped.* That tacit expertise is the part the written policy doesn't contain and a lab can't self-serve. At runtime the agent **consults** them before firing a tool: where a required slot is `UNKNOWN`, it **asks** instead of guessing.
 
+**Theoretical frame — a PDDL action with an epistemic precondition.** Each tool is a [PDDL](https://en.wikipedia.org/wiki/Planning_Domain_Definition_Language) action: name, parameters, **preconditions**, effects. Classic preconditions are *ontic* — facts about the world. Our one extension is the **epistemic precondition**: a fact the agent must *know* (a belief slot resolved, not `UNKNOWN`) before the action fires. Task 47:
+
+```lisp
+(:action transfer-to-human
+  :parameters (?user)
+  :precondition (and (issue-unresolved ?user)          ; ontic — DB-checkable
+                     (knows transfer-requested ?user))  ; EPISTEMIC — belief-only
+  :effect (transferred ?user))
+```
+
+The table below is the `(knows …)` slice of each action — the epistemic preconditions τ³'s DB grade can't see. (Related: [PDDL-Mind](https://arxiv.org/abs/2604.17819) makes the belief state explicit in PDDL for theory-of-mind accuracy; we extend belief from a *tracked* quantity to an *action precondition*.)
+
 #### Some example epistemic preconditions τ³ can't grade in airline customer service
 
 Each is a `belief.X` guard on the belief state. Violations are **DB-invisible**: the terminal database looks identical to a correct run, so state-grading passes them.
@@ -85,7 +109,7 @@ Each is a `belief.X` guard on the belief state. Violations are **DB-invisible**:
 | 9 | Book a new reservation (`book_reservation`) | `belief.payment_method_authorized == True` | Charges a saved card the user didn't approve for *this* purchase. |
 | 10 | Cancel a multi-segment trip (`cancel_reservation`) | `belief.cancel_scope == whole_trip` | Cancels the whole itinerary when the user meant one leg — every cancellation looks valid in the DB. |
 
-→ Why state-grading is blind to these, what each guard encodes (invariant / action precondition / severity weight), the grader/runtime/training triple, and the three-valued ABAC framing: [`docs/epistemic-preconditions.md`](docs/epistemic-preconditions.md).
+→ Why state-grading is blind to these, what each guard encodes (invariant / action precondition / severity), and how one policy drives both **grading** and **gating** (with the three-valued ABAC framing): [`docs/epistemic-preconditions.md`](docs/epistemic-preconditions.md).
 
 ## Root cause of the false pass: task instructions ↔ grading criteria drift
 

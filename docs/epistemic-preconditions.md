@@ -12,15 +12,16 @@ A precondition is **ontic** if it's a fact about the world (a state-grader can c
 
 The airline pilot falls out of this split: the three FAILs τ³ already catches (24 / 35 / 43) are ontic (a wrongful cancellation *changes* the DB); the one detection the belief layer *adds* (task 47) is epistemic (the transfer leaves the DB unchanged).
 
-## One artifact, three uses
+## One artifact, two uses
 
-The same SME-authored table is consumed in three places — "one spec, many roles" made concrete:
+The same SME-authored table is consumed in two places — "one spec, many roles" made concrete:
 
 | Used as… | By whom | Effect |
 |---|---|---|
-| runtime gate | the agent | asks a question instead of acting under ambiguity |
-| grader | the eval | flips task-47 `PASS → FAIL` |
-| reward signal | training | penalizes acting-while-`UNKNOWN` |
+| **gating** (runtime) | the agent | asks a question instead of acting under ambiguity |
+| **grading** (eval) | the analyzer | flips task-47 `PASS → FAIL` |
+
+(No reward or RL: the loop is rubric-scored eval + failure-pattern analysis, then targeted expert data — not policy-gradient training.)
 
 ## What each guard encodes — three pieces of expert input
 
@@ -30,7 +31,7 @@ A single row is not one fact; it decomposes into three pieces the written policy
 |---|---|---|
 | Default every belief slot to `UNKNOWN`; add a system invariant — *never transfer without an explicit YES*. | The agent can't treat an unresolved slot as consent; escalation now requires positive evidence. | the **invariant** |
 | In the `ProblemSpec`, declare that a `transfer` requires `transfer_requested == True`. | *Acting while `UNKNOWN`* becomes a checkable violation, not a judgment call. | the **action precondition** |
-| Grader penalty when an escalating action fires under `UNKNOWN`. | Turns the belief signal into a reward component the lab can use in eval or training. | the **severity weight** |
+| Grader penalty when an escalating action fires under `UNKNOWN`. | Lets the eval weight how severe the violation is. | the **severity** |
 
 Because the `ProblemSpec` is versioned, executable **policy-as-code**, each addition is an auditable record of what *correct* means as policy evolves.
 
