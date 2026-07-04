@@ -10,7 +10,7 @@
 
 **Failure pattern example.** Claude Haiku refuses an ineligible refund, then transfers the user to a human — though the task said *"you don't want to be transferred to another agent."* τ³-bench scores it **PASS**: the *don't-transfer* requirement lives only in free-text `task_instructions`, never in the grader's structured criteria. A **silent false-pass**. ([root cause →](#root-cause-of-the-false-pass-task-instructions--grading-criteria-drift))
 
-**What AI builders need.** Rules specifying what an agent must *sufficiently* understand about the user's state of mind — the part the pending action depends on — before acting.
+**What AI builders need.** Rules specifying what an agent must *sufficiently* understand about the user's state of mind — the part the pending action depends on — before acting. ([what that looks like across ~25 airline actions →](docs/preflight-checklist-example.md))
 
 **Two failure patterns the preflight check targets.**
 - **Revealed but missed** *(the proof — findable now)* — the task states the requirement, the agent ignores it, and the grader misses it (task 47). Detectable automatically by comparing `task_instructions` ↔ agent actions ↔ graded criteria.
@@ -26,7 +26,7 @@ A three-phase plan; Phase 1 — this paper — unblocks Phases 2 and 3.
 > 2. **Resolve Ignorance** *(Human Subject Matter Expert)* — turn each ignorance pattern into an **action-precondition rule** the grader can score. Two examples of this expert knowledge:
 >    - `transfer_to_human` requires `belief.transfer_requested == True` — the agent must *know the user asked* before escalating (task 47).
 >    - `cancel_reservation` requires `belief.cancel_confirmed == True` — the agent must *confirm intent*, not act on venting (*"this is ridiculous"*).
-> 3. **Preflight Check** *(AI builder)* — turn each rule into the agent's pre-action gate: when a required belief is `UNKNOWN`, **halt and ask** before firing — closing the gap between the agent's belief and the user's actual requirements.
+> 3. **Preflight Check** *(AI builder)* — turn each rule into the agent's pre-action gate: when a required belief is `UNKNOWN`, **halt and ask** before firing — closing the gap between the agent's belief and the user's actual requirements. ([example checklist →](docs/preflight-checklist-example.md))
 
 ## Glossary
 
@@ -154,6 +154,8 @@ Each is a `belief.X` guard on the belief state. Violations are **DB-invisible**:
 → Why state-grading is blind to these, what each guard encodes (invariant / action precondition / severity), and how one policy drives both **grading** and **gating** (with the three-valued ABAC framing): [`docs/epistemic-preconditions.md`](docs/epistemic-preconditions.md).
 
 → A fuller **illustrative** preflight checklist across ~25 airline actions (draft — not yet tool-bound or policy-traced): [`docs/preflight-checklist-example.md`](docs/preflight-checklist-example.md).
+
+→ Design notes — the four content types (requirement / preference / understanding / consent), *informed consent* as a bounded slice of causal-model alignment, and the harm-anchored SME elicitation pipeline: [`docs/design-notes-what-to-establish.md`](docs/design-notes-what-to-establish.md).
 
 ## Root cause of the false pass: task instructions ↔ grading criteria drift
 
