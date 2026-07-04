@@ -4,7 +4,7 @@
 
 ## Motivation
 
-**A real miss — task 47.** We ran Claude Haiku on τ³ airline task 47:
+We ran Claude Haiku on τ³ airline task 47 and found a grading failure:
 - **The user's latent requirement:** *don't transfer me to another agent* (stated in the task).
 - **What the agent did:** correctly refused an ineligible refund — then **transferred the user to a human anyway**, never confirming they wanted it.
 - **What τ³-bench scored:** **PASS** — the transfer left the database unchanged, and the *don't-transfer* rule sits in free-text `task_instructions`, not in the grader's structured criteria.
