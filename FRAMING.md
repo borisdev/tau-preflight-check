@@ -35,6 +35,8 @@ Our core move — an action may require the agent to *know* something, not merel
 - **Design by Contract** — Meyer (Eiffel): `require` / `ensure` / `invariant`. Our per-action guards are preconditions in the DbC sense; the *invariant / action-precondition / severity* decomposition is DbC applied per tool.
 - **FMEA** (failure mode and effects analysis): enumerate each action's failure mode and severity — the origin of our per-guard **severity** weight.
 - **ABAC / policy-as-code** (OPA, AWS IAM): the runtime gate is attribute-based access control over the belief state, extended to three-valued **allow / deny / ask**. See [`docs/epistemic-preconditions.md`](docs/epistemic-preconditions.md).
+- **Checklists** — Gawande's *Checklist Manifesto*; aviation preflight / crew resource management. A fixed per-action checklist prevents catastrophic omission of the obvious. Our per-action epistemic checklist **is** a **preflight check** — the benchmark is named for it.
+- **Intent-governed authorization** — Zhu & Wang 2026 ([arXiv:2606.22916](https://arxiv.org/abs/2606.22916)) gate an agent's tool authority by user intent (ABAC over intent, "intent can only restrict, never expand"). Distinct from us: they restrict authority from *expressed* intent (a **security/permissions** problem); we resolve *latent* intent by probing and grade whether the agent did (an **eval** problem).
 
 ## 4. Clarification & information gain (closest prior art)
 
