@@ -5,7 +5,7 @@
 ## TL;DR
 
 - **The failure.** AI agents sometimes act before resolving what they need to know — acting without common ground — producing unwanted actions that outcome graders were never told to check for: their criteria only cover database-checkable outcomes, not the unstructured user-problem constraints inside the `task_instructions`.
-- **What AI builders need.** Expert-authored rules specifying what an agent must understand or confirm before each consequential action.
+- **What AI builders need.** Expert-authored rules specifying what an agent must *sufficiently* understand about the user's state of mind — the part relevant to the pending action — before taking it.
 - **This paper's objective.** Analyze recurring failure patterns, identify the unresolved knowledge behind each bad action, and convert that gap into a focused question for domain experts to answer.
 
 ## Overview
