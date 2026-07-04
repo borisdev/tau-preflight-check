@@ -2,7 +2,7 @@
 
 *Before an AI agent fires a consequential action, does it run a preflight check — confirming the user's latent requirements that no database can answer?*
 
-**This benchmark.** We extend τ³-bench from grading only the terminal database state to also grading whether the AI agent runs a **preflight check** before firing a consequential action — confirming the user's latent requirements (consent, intent, constraints) that no database can answer. τ³'s setting is airline support, but the pattern is general — coding, medical, and financial agents fail the same way.
+**This benchmark.** We extend τ³-bench from grading only the terminal database state to also grading whether the AI agent runs a **preflight check** before firing a consequential action — confirming the user's latent requirements — **intent, consent, scope, and constraints** — that no database can answer. τ³'s setting is airline support, but the pattern is general — coding, medical, and financial agents fail the same way.
 
 ## Motivation
 
