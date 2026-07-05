@@ -30,11 +30,6 @@ We ran Claude Haiku on τ³ airline task 47 and found a grading failure:
 
 Our eval innovation: we **instrument the unobservable** — the user's latent problem and the agent's current belief — as two comparable typed objects, and treat the **gap between them as the failure signal**. That gap flags exactly where **targeted expert data** most improves AI quality.
 
-**Why it matters for AI quality.**
-- **A more precise, deterministic grader** — the task-47 `PASS` above is a real bug it catches on a live τ³ airline task.
-- **Better-behaved agents** — when a required `ProblemSpecBelief` slot is `UNKNOWN`, the agent asks rather than acting on a guess. [ProblemSpec vs ProblemSpecBelief →](#problemspec-and-problemspecbelief)
-- **Human expertise becomes reusable data** — the shape of the `ProblemSpec` lets us collect expert judgment and encode it as **human-expert data** that both grades and gates agent behavior. [epistemic-precondition details →](docs/epistemic-preconditions.md)
-
 ---
 
 <details>
