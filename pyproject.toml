@@ -5,13 +5,12 @@ build-backend = "hatchling.build"
 [project]
 name = "tau2"
 version = "1.0.0"
-description = "tau-bench: Benchmarking tool-agent-user interaction in real-world domains"
+description = "tau-PreflightCheck: a fork of tau3-bench adding a typed, provenance-grounded user-requirements grader (Phase-1 pilot)"
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
 license = "MIT"
 authors = [
-    { name = "Victor Barres", email = "victor.barres@gmail.com" },
-    { name = "Honghua Dong", email = "dhh19951@gmail.com" }
+    { name = "Boris Dev", email = "boris.dev@gmail.com" }
 ]
 dependencies = [
     "rich",
@@ -33,6 +32,7 @@ dependencies = [
     "requests>=2.31.0",
     "numpy>=1.24.0",
     "httpx>=0.24.0",
+    "anthropic>=0.39.0",
 ]
 
 [project.optional-dependencies]
@@ -78,8 +78,9 @@ all = [
     "tau2[voice,knowledge,gym,dev,experiments]",
 ]
 [project.urls]
-Homepage = "https://taubench.com/"
-Repository = "https://github.com/sierra-research/tau2-bench"
+Homepage = "https://github.com/borisdev/tau-preflight-check-bench"
+Repository = "https://github.com/borisdev/tau-preflight-check-bench"
+Upstream = "https://github.com/sierra-research/tau2-bench"
 
 [project.scripts]
 tau2 = "tau2.cli:main"
