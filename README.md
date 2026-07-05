@@ -18,7 +18,7 @@ We ran Claude Haiku on τ³-bench airline task 47 and flag an **in-spirit failur
 }
 ```
 
-For task 47, **τ³ scored it PASS even though the agent did not honor that stated requirement**: its grade checks only the final database state, and the transfer changed nothing there — so the *don't-transfer* request never enters the grade. It lives in the task's prose (τ³'s `task_instructions` field), not in the database facts the grader scores. **Below, *The patch* shows how we attack that.**
+τ³ scored it **PASS** anyway — *The patch* (below) shows how we make that requirement gradeable.
 
 ## Medical side-effects analogy
 
