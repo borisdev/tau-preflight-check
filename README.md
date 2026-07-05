@@ -26,7 +26,7 @@ Like a medical treatment, an AI agent can *effectively* solve the user's problem
 
 ## Scope
 
-This release grades whether the agent honored the user's **stated** constraints on *how* an action is done (task 47's *don't-transfer*) — **not** task completion (τ³'s job), and **not** probing the *unknown* requirements the user never stated (the deferred belief-tracking phase).
+This release grades whether the agent honored the user's **stated** constraints on *how* an action is done (task 47's *don't-transfer*) — **not** task completion (τ³'s job), and **not** probing the *unknown* requirements the user never stated ([the deferred belief-tracking phase →](#what-this-sets-up-eliciting-sme-expertise-and-belief-tracking)).
 
 <details>
 <summary><b>Glossary</b> — key terms, sequenced by dependency (click to expand)</summary>
