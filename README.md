@@ -14,7 +14,7 @@ We ran Claude Haiku on τ³ airline task 47 and found a grading failure:
 
 **How surfacing these failure patterns might help AI quality in customer-service.** These failures turn into concrete questions for human subject-matter experts: *for a given action, what must an AI agent sufficiently understand about its user's state of mind before committing — so it doesn't harm or inconvenience the user?* To illustrate, a table of **synthetic SME answers** to the question — *what must the customer-service agent establish about the customer's state of mind before taking an action?*
 
-| Agent action | Customer state-of-mind pre-conditions | Example failure caught |
+| Agent action | SME Expertise: Customer state-of-mind pre-conditions | Example failure caught |
 |---|---|---|
 | **Transfer to human agent** | Transfer is required or explicitly requested; reason explained; user consents where appropriate | Agent gives up and transfers a user who asked not to be transferred (**task 47**) |
 | **Cancel reservation** | Correct reservation identified; cancellation scope confirmed; refund/credit terms explained; user explicitly confirms cancellation | User was only asking about options, but agent cancels |
