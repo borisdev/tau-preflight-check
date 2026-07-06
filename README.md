@@ -112,7 +112,7 @@ Epistemic precondition in depth (ontic vs epistemic, SME hydration, the PDDL / P
 
 ## Impact on AI quality: eliciting SME expertise
 
-To illustrate, synthetic SME protocols answering *what must a customer-service agent establish about the user before taking action X?*:
+To illustrate how this bench can be integrated with SME expertise, below are synthetic SME protocols answering *what must a customer-service agent establish about the user before taking action X?*:
 
 | Agent action | SME-elicited preflight protocol | Example failure caught |
 |---|---|---|
