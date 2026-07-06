@@ -163,3 +163,8 @@ Each rule's `action` is a **canonical τ³ tool name**, matched against the traj
 - **Refactor:** [issue #1](https://github.com/borisdev/tau-preflight-check-bench/issues/1) · merged to `main` (added the optional `user_preflight_requirements` field).
 - **Provenance:** [`VENDOR.md`](VENDOR.md) · [`LICENSE`](LICENSE) (MIT, Sierra Research) · [`README_upstream_tau3.md`](README_upstream_tau3.md).
 
+## About me
+
+I dissect implicit domain reasoning into explicit underlying structures — **domain ontology as code**. τ-PreflightCheck is one instance: a user's *latent* requirement, buried in task prose, lifted into a typed, provenance-grounded object a grader can score (`UserPreflightRequirements`).
+
+Boris — [borisdev.dev](https://borisdev.dev/)
