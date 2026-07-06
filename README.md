@@ -1,6 +1,8 @@
 # τ-PreflightCheck
 
-*Before an AI agent fires a consequential action, does it run a preflight check that probes the user's unobserved understanding and preferences — so it doesn't hurt or hassle the user?*
+[![CI](https://github.com/borisdev/tau-preflight-check-bench/actions/workflows/ci.yml/badge.svg)](https://github.com/borisdev/tau-preflight-check-bench/actions/workflows/ci.yml)
+
+*Before an AI agent fires a consequential action, does it respect the user's action-relevant requirements — and can the grader detect when it does not?*
 
 ## Motivation
 
@@ -22,7 +24,7 @@ We ran Claude Haiku on τ³-bench airline task 47 and flag an **in-spirit failur
 
 ## Medical side-effects analogy
 
-Like a medical doctor treating a patient, an AI agent can *effectively* solve the customer's problem yet still harm them through the **side effects** of its actions — and **each customer tolerates different side effects** (task 47: an unwanted transfer). τ³ grades effectiveness — *did it solve the problem?* We grade the customer's limits on those side effects — *did it run a preflight check before acting?*
+Like a medical doctor treating a patient, an AI agent can *effectively* solve the customer's problem yet still harm them through the **side effects** of its actions — and **each customer tolerates different side effects** (task 47: an unwanted transfer). τ³ grades effectiveness — *did the agent reach the target outcome?* We add a second dimension — *did it respect the customer's stated limits while doing so?* (Whether the agent actively *probes* for unstated limits is the later belief-tracking phase.)
 
 ## Scope
 
