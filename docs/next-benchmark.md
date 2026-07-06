@@ -47,9 +47,10 @@ Author **3 seed tasks** — one *clear-comply*, one *clear-protect*, one *genuin
 - **Grader**: rubric vs SME vs LLM-judge for "was the call correct?" (careful — this is the hard part, and where HealthBench-style grader critiques apply).
 - Does severity × ambiguity **actually** produce a model gradient? ← the one hypothesis the 3-task experiment settles.
 
-## Repo status (2026-07-06)
-- Renamed `tau-bench-audit`; `main` has the pipeline + two-pattern framing + CI.
-- **PR #6** open (audit repositioning) — decide merge tomorrow; it's still accurate for *what exists*, and doesn't conflict with this direction.
+## Repo status (end of 2026-07-06)
+- Repo name reverted to `tau-preflight-check-bench` (URL now matches the title `τ-PreflightCheck`); the "audit" repositioning (PR #6) was **closed** — too abstract for the exec read.
+- Live framing on `main`: *τ-PreflightCheck extends τ-bench to grade each user's individual, **latent** requirements (τ-bench grades task + general policy; latent prefs are never graded).*
+- `main` has: the full pipeline (run/lift/measure + multi-run + caching), the two-pattern framing, the honest full-suite result (1 flip / task 6), CI, corrected authorship, simplified medical-analogy one-liner.
 - Multi-seed run (K=5) blocked only on **Anthropic API credits** (~$50 top-up; caching already added).
 
 ---
