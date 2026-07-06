@@ -20,12 +20,13 @@ import anthropic
 
 AGENT_MODEL = "claude-haiku-4-5-20251001"
 USER_MODEL  = "claude-sonnet-4-6"
-TASK_IDS = ["47", "43", "39", "35", "24", "11"]
+# TASK_IDS set below (after ALL_TASKS): env RUN_TASKS overrides, else all airline tasks
 MAX_EXCHANGES = 12
 MAX_TOOL_STEPS = 8
 
 POLICY = open(os.path.join(ROOT, "data/tau2/domains/airline/policy.md")).read()
 ALL_TASKS = {t["id"]: t for t in json.load(open(os.path.join(ROOT, "data/tau2/domains/airline/tasks.json")))}
+TASK_IDS = os.environ["RUN_TASKS"].split() if os.environ.get("RUN_TASKS") else list(ALL_TASKS.keys())
 client = anthropic.Anthropic()
 
 USER_SIM_TMPL = """You are role-playing a CUSTOMER contacting an airline customer-service agent. Stay in character.
@@ -133,7 +134,7 @@ def main():
             except Exception:
                 print(f"task {tid} FAILED"); traceback.print_exc()
     results.sort(key=lambda r: TASK_IDS.index(r["task_id"]))
-    out = os.path.join(ROOT, "poc/trajectories.json")
+    out = os.path.join(ROOT, os.environ.get("RUN_OUT", "poc/trajectories_all.json"))
     json.dump(results, open(out, "w"), indent=2, default=str)
     print(f"\nsaved {len(results)} trajectories -> {out}")
     print("pass:", sum(r["reward"] for r in results), "/", len(results))

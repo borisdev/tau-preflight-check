@@ -12,3 +12,6 @@ results/
 # generated run artifacts
 data/simulations/
 poc/paired_grades.*
+poc/trajectories_all.json
+poc/_pass0.log
+poc/_smoke.json
