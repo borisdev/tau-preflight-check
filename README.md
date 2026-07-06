@@ -53,12 +53,6 @@ We ran Claude Haiku on τ³-bench airline task 47 and flag an **in-spirit failur
 
 Analogous to how a medical doctor can harm or hassle a patient by ignoring her personal side-effect fears and inconvenience profile, a customer-service agent can harm or hassle a customer by ignoring their latent action-requirements and understanding.
 
-## Release scope
-
-**The problem.** τ-bench-family graders score only the final database state, so they are blind to whether the agent respected the user's requirements on *how* a consequential, irreversible action is taken — those requirements don't change the DB and may be latent. An agent that fires an irreversible action (transfer, cancel, charge) the user didn't want can still pass.
-
-This release grades whether the agent’s **actions** respected the user’s requirements on *how* — as specified in the task profile (task 47’s *don’t-transfer*), **even when the user never voiced them**. It does **not** grade task completion (τ³’s job), nor whether the agent actively **asked** to establish those requirements before acting ([the deferred belief-tracking phase →](#impact-on-ai-quality-eliciting-sme-expertise-and-belief-tracking)).
-
 ## The patch: make the implicit requirement explicit
 
 We make the unobservable **checkable**: the user's latent requirements become a typed object the grader scores the agent's actions against (the agent's *belief* over them is the deferred belief-tracking layer — today only the target ships). Where the agent's actions and that target diverge is the failure signal, and it flags where **targeted expert data** most improves AI quality.
