@@ -32,7 +32,7 @@ The below hypothetical scenarios, from **airline support**, **medicine**, and **
 
 ## The worked example: task 47
 
-We ran Claude Haiku on τ³ airline **task 47**. It handled the core request correctly — refused an ineligible refund — but then **transferred the user to a human without asking.** That transfer is a needless **hassle** that **hurt neither of the other two goals** (task success and the safety invariants were both satisfiable without it). The user's profile ruled the transfer out; she just never voiced it:
+To contrast τ³ and τ-discernment, consider airline **task 47**'s user requirement below:
 
 ```diff
 {
@@ -46,9 +46,9 @@ We ran Claude Haiku on τ³ airline **task 47**. It handled the core request cor
 }
 ```
 
-τ³'s terminal-state grader **passes** this — the transfer changes no database row. A discernment grader **catches** it. Task 47 is the **easy corner**: pure over-caution, *no competing goal to justify the hassle* — which is exactly why it's the right place to show the measurement works before tackling genuine tensions.
+Given Claude Haiku as the customer-service agent, τ³'s terminal-state grader **passes** this task even though the agent transferred the user. In contrast, τ-discernment would **fail** it for not respecting the user's requirement. Task 47 is an easy case for τ-discernment since there were no competing policy or task goals to justify the hassle. Nevertheless, it motivates the code patches explained below.
 
-**Tell the agent to check — the policy.** We extend the airline policy the agent is given (a generalization of τ³'s existing *confirm before a database update* rule):
+We extend the airline policy the agent is given (a generalization of τ³'s existing *confirm before a database update* rule):
 
 ```diff
   Before taking any actions that update the booking database (booking, modifying flights,
