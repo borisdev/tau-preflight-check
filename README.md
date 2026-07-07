@@ -22,7 +22,6 @@ Below are hypothetical airline customer-service scenarios illustrating how goals
 | Task success vs user requirement | Customer: *"don't transfer me to a human."* But only a human can waive the $1,000 fee and hold her seat on the last flight to her daughter's wedding — obeying her costs her **both**. The small **hassle** of a transfer avoids a large **harm**. |
 | Safety invariant vs user preference | Policy requires confirmation before cancelling, but asking again annoys the user. |
 | User requirement vs safety invariant | User says "don't ask me anything else," but the cancellation is irreversible. |
-| *(the summary)* | An agent can cancel correctly yet skip warning about the refund loss — **same terminal state, worse discernment.** |
 
 The **two riskiest assumptions** of this work:
 
