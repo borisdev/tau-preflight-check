@@ -2,13 +2,13 @@
 
 [![CI](https://github.com/borisdev/tau-discernment/actions/workflows/ci.yml/badge.svg)](https://github.com/borisdev/tau-discernment/actions/workflows/ci.yml)
 
-*This research extends τ³-bench beyond **effectiveness** to also grade **discernment** — how well an AI agent navigates competing goals:*
-
 <details>
 <summary><b>What is τ (tau)?</b></summary>
 
 τ-bench grades **Tool–Agent–User** interaction (Sierra): a *tool*-using *agent* serving a *user* in a real-world domain. τ² added dual control; **τ³** added task fixes (the version we extend); this repo is **τ-discernment**.
 </details>
+
+*This research extends τ³-bench beyond **effectiveness** to also grade **discernment** — how well an AI agent navigates competing goals:*
 
 - **task success** — **effectiveness**, i.e., reaching the expected DB terminal state
 - **safety invariants** — policy rules that hold for every customer
