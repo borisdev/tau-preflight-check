@@ -2,9 +2,7 @@
 
 [![CI](https://github.com/borisdev/tau-discernment/actions/workflows/ci.yml/badge.svg)](https://github.com/borisdev/tau-discernment/actions/workflows/ci.yml)
 
-*This research extends τ³-bench beyond **effectiveness** to also grade **discernment** — how well an AI agent balances **task success, safety invariants, and user requirements** when they conflict.*
-
-The potential for competing goals already exists in a τ³ task:
+*This research extends τ³-bench beyond **effectiveness** to also grade **discernment** — how well an AI agent navigates competing goals:*
 
 - **task success** — **effectiveness**, i.e., reaching the expected DB terminal state
 - **safety invariants** — policy rules that hold for every customer
